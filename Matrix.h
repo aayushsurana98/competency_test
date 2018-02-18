@@ -1,39 +1,51 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
 
 using namespace std;
 
-template<typename T>
-class Matrix {
-	
-	valarray<T> data;
-	size_t rows;
-	size_t columns;
-	
+template <typename T>
+class MatrixExp {
+
 	public:
-	Matrix(size_t rows, size_t columns) : data(rows*columns), rows(rows), columns(columns) 	    {assert(rows>0 and columns>0);}
 
-	T operator()(size_t row, size_t col) const
-	{
-		return data[rows*row + 1*col];
+		double operator[](size_t i) const { return static_cast<T const&>(*this)[i]; }
+
+		size_t size()               const { return static_cast<T const&>(*this).size(); }
+
+		operator T& () { return static_cast<T&>(*this); }
+
+		operator const T& () const { return static_cast<const T&>(*this); }
+
+};
+
+class Matrix : public MatrixExp< Matrix > {
+	vector< double > data;
+	public:
+	double operator[](size_t i) const { return data[i]; }
+	double &operator[](size_t i)      { return data[i]; }
+	size_t size() const               { return data.size(); }
+	
+	//data[] contains the matrix elements in the form of 1-D vector
+	//data[0] stores the number of rows
+	
+	double operator()(size_t row, size_t col) const{
+		return data[data[0]*row + col + 1];
 	}
 
-	T& operator()(size_t row, size_t col)
-	{
-		return data[rows*row + 1*col];
+	double& operator()(size_t row, size_t col){
+		return data[data[0]*row + col + 1];
 	}
 
-	Matrix& operator+=(const Matrix &rest)
-	{
-		assert((rows == rest.rows) and (columns == rest.columns));
-		data+=rest.data;
-		return *this;
-	}
+	Matrix(size_t n, size_t m) : data(n*m + 1){assert(n>0 and m>0);data[0] = n;}
 
-	Matrix& operator*=(const Matrix &rest)
-	{
-		assert(columns == rest.rows);
-		data*=rest.data;
-		return *this;
+
+	//the addition operation occurs only at the destination when in is reached hence, no memory overhead
+
+	template <typename T>
+	inline Matrix(MatrixExp<T> const& X) : data(X.size()) {
+		data[0] = X[0];
+		for(int i = 1; i < X.size(); i++) {
+			data[i] = X[i];
+		}
 	}
 		
 	~Matrix()
@@ -42,15 +54,31 @@ class Matrix {
 	}
 
 };
-	
-template<typename T>
-Matrix<T> operator+(Matrix<T> a, const Matrix<T>& b)
-{
-	return a += b;
-}
 
-template<typename T>
-Matrix<T> operator*(Matrix<T> a, const Matrix<T>& b)
-{
-	return a *= b;
+template <typename E1, typename E2>
+class MatrixSum : public MatrixExp<MatrixSum<E1, E2> > {
+
+	E1 const& _u;
+	E2 const& _v;
+
+	public:
+	MatrixSum(E1 const& u, E2 const& v) : _u(u), _v(v) {		
+		assert(u[0] == v[0] and (u.size()-1) == (v.size() - 1));
+	}
+
+	double operator[](size_t i) const { 
+		if(i!=0) {
+			return _u[i] + _v[i];
+		}
+		else return _v[i];
+	}
+	size_t size()               const { 
+		return _v.size(); 
+	}
+};
+
+template <typename E1, typename E2>
+MatrixSum<E1,E2> const
+operator+(E1 const& u, E2 const& v) {
+	return MatrixSum<E1, E2>(u, v);
 }
