@@ -17,8 +17,8 @@ class MatrixExp {
 
 };
 
-class Matrix : public MatrixExp< Matrix > {
-	vector< double > data;
+class Matrix : public MatrixExp<Matrix> {
+	valarray<double> data;
 	public:
 	double operator[](size_t i) const { return data[i]; }
 	double &operator[](size_t i)      { return data[i]; }
@@ -38,15 +38,27 @@ class Matrix : public MatrixExp< Matrix > {
 	Matrix(size_t n, size_t m) : data(n*m + 1){assert(n>0 and m>0);data[0] = n;}
 
 
-	//the addition operation occurs only at the destination when in is reached hence, no memory overhead
+	//the addition operation occurs only at the destination when in is reached hence, no memory overhead cost
 
 	template <typename T>
-	inline Matrix(MatrixExp<T> const& X) : data(X.size()) {
-		data[0] = X[0];
+	inline Matrix &operator+=(const MatrixExp<T> &X) {
+		this->data[0] = X[0];
 		for(int i = 1; i < X.size(); i++) {
-			data[i] = X[i];
+			this->data[i] = this->data[i] + X[i];
+			cout<<i<<" "<<data[i]<<endl;
 		}
+		return *this;
 	}
+
+	template <typename T>
+	inline Matrix &operator=(const MatrixExp<T> &X) {
+		this->data[0] = X[0];
+		for(int i = 1; i < X.size(); i++) {
+			this->data[i] = X[i];
+		}
+		return *this;
+	}
+
 		
 	~Matrix()
 	{
@@ -81,4 +93,24 @@ template <typename E1, typename E2>
 MatrixSum<E1,E2> const
 operator+(E1 const& u, E2 const& v) {
 	return MatrixSum<E1, E2>(u, v);
+}
+
+const int n=3;
+
+int main(){
+	Matrix m1(n,n), m2(n,n), m3(n,n);
+	for(int i=0;i<n;i++){
+		for(int j=0;j<n;j++) {
+			m1(i,j) = i + j;m2(i,j) = i + j;
+		}
+	}
+
+	m1 += m1 + m2;
+	
+	for(int i=0;i<n;i++) {
+		for(int j=0;j<n;j++) {
+			cout << i << " " << j << " " << m1(i,j) << endl;
+		}
+	}
+	return 0;
 }
