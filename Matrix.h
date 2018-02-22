@@ -44,39 +44,48 @@ class Matrix {
 
 	template <typename T>
 		inline Matrix<R> &operator+=(const MatrixExp<T> &X) {
-			this->data[0] = X[0];
-			for(size_t i = 1; i < X.size(); i++) {
-				this->data[i] = this->data[i] + X[i];
-			}
-			return *this;
+
+			auto addToCurrent = [&]() {
+				this->data[0] = X[0];
+				for(size_t i = 1; i < X.size(); i++) {
+					this->data[i] = this->data[i] + X[i];
+				}
+				return *this;	
+			};
+			return addToCurrent();
 		}
 
 	template <typename T>
 		inline Matrix<R> &operator=(const MatrixExp<T> &X) {
-			this->data[0] = X[0];
-			for(size_t i = 1; i < X.size(); i++) {
-				this->data[i] = X[i];
-			}
-			return *this;
+			
+			auto equalTo = [&]() {
+				this->data[0] = X[0];
+				for(size_t i = 1; i < X.size(); i++) {
+					this->data[i] = X[i];
+				}
+				return *this;
+			};
+			return equalTo();
 		}
 
 	template <typename T>
-		inline Matrix &operator*=(const MatrixExp<T> &X) {
+		inline Matrix<R> &operator*=(const MatrixExp<T> &X) {
 	  	
 			//(total size - 1) divided by the number of rows gives the number of columns of the matrix
 		
 			assert(((this->data.size()-1)/(this->data[0])) == X[0]);
-			valarray<R> ans((X[0])*((X.size()-1)/X[0]) + 1);
 
+			valarray<R> ans((X[0])*((X.size()-1)/X[0]) + 1);
 			ans[0]=X[0];
 
-			for (size_t i = 0; i < this->data[0]; i++) {
-				for (size_t j = 0; j < ((X.size()-1)/(X[0])); j++) {
-					for (size_t k = 0; k < (this->data.size()-1)/(this->data[0]); k++) {
-	 					ans[X[0]*i + j + 1] += this->data[X[0]*i + k + 1] * X[X[0]*k + j + 1];
-	 				}
-				}
-	 		}
+				for (size_t i = 0; i < this->data[0]; i++) {
+					for (size_t j = 0; j < ((X.size()-1)/(X[0])); j++) {
+						for (size_t k = 0; k < (this->data.size()-1)/(this->data[0]); k++) {
+	 						ans[X[0]*i + j + 1] += this->data[X[0]*i + k + 1] * X[X[0]*k + j + 1];
+	 					}
+					}
+	 			}
+
 			for (size_t i = 0; i < this->data[0]; i++) {
 				for (size_t j = 0; j < ((X.size()-1)/(X[0])); j++) {
 					this->data[X[0]*i + j +1] = ans[X[0]*i + j + 1];
@@ -96,7 +105,7 @@ template <typename E1, typename E2>
 class MatrixSum : public MatrixExp<MatrixSum<E1, E2> > {
 
 	E1 const& _u;
-	E2 const& _v;
+	E2 const& _v; 
 
 	public:
 	MatrixSum(E1 const& u, E2 const& v) : _u(u), _v(v) {		
@@ -129,12 +138,15 @@ operator*(Matrix<E> const& u, Matrix<E> const& v) {
 	Matrix<E> ans(u[0],((v.size()-1)/v[0]));
 	ans[0] = u[0];
 
-	for (size_t i = 0; i < u[0]; i++) {
-		for (size_t j = 0; j < (v.size()-1)/v[0]; j++) {
-			for (size_t k = 0; k < (u.size()-1)/u[0]; k++) {
-				ans(i,j) += u(i,k)*v(k,j);
+	auto multiply = [&]() {
+		for (size_t i = 0; i < u[0]; i++) {
+			for (size_t j = 0; j < (v.size()-1)/v[0]; j++) {
+				for (size_t k = 0; k < (u.size()-1)/u[0]; k++) {
+					ans(i,j) += u(i,k)*v(k,j);
+				}
 			}
 		}
-	}
-	return ans;
+		return ans;
+	};
+	return multiply();
 }
